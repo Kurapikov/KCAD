@@ -14,6 +14,13 @@ list(APPEND CMAKE_PREFIX_PATH "/opt1/Qt/6.5.3/gcc_64")
 find_package(Qt6 COMPONENTS Core Quick Qml REQUIRED)
 qt_standard_project_setup()
 
+# Try find BGFX
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/bgfx/include/bgfx)
+set(BGFX_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/bgfx/bin)
+find_library(BGFX_bgfxDebug bgfxDebug HINTS ${BGFX_LIB_PATH})
+find_library(BGFX_bimgDebug bimgDebug HINTS ${BGFX_LIB_PATH})
+find_library(BGFX_bxDebug bxDebug HINTS ${BGFX_LIB_PATH})
+
 # Declare source files
 file(GLOB_RECURSE PROJECT_SRC_LIST RELATIVE ${CMAKE_SOURCE_DIR}
     "src/*.cpp"
@@ -26,4 +33,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE Qt6::Core
     PRIVATE Qt6::Quick
     PRIVATE Qt6::Qml
+    PRIVATE ${BGFX_bgfxDebug}
+    PRIVATE ${BGFX_bimgDebug}
+    PRIVATE ${BGFX_bxDebug}
 )

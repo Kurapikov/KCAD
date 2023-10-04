@@ -9,3 +9,15 @@ libvulkan-dev
 
 qt 6.5.3 (via qt.io online installer)
 
+bgfx (latest, via github download and following procedure:)
+1. mkdir -p 3rdparty_build/bgfx
+2. cd 3rdparty_build/bgfx
+3. git clone https://github.com/bkaradzic/bx.git --depth 10
+4. git clone https://github.com/bkaradzic/bimg.git --depth 10
+5. git clone https://github.com/bkaradzic/bgfx.git --depth 10
+6. cd bgfx
+7. make linux-debug64
+8. mkdir ../../../3rdparty/bgfx
+9. cp -R include ../../../3rdparty/bgfx/
+A. cp -R .build/linux64-_gcc/bin ../../../3rdparty/bgfx/
+
