@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "generate",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S",
+                ".",
+                "-B",
+                "build",
+                "-G",
+                "Ninja"
+            ]
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "dependsOn": "generate",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "build"
+            ]
+        }
+    ]
+}

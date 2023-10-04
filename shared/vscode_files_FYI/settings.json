@@ -1,0 +1,12 @@
+{   
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "source": "bash",
+            "icon": "terminal-bash",
+            "path": "bash"
+        },
+        "Command Prompt": null,
+        "Git Bash": null
+    },
+    "terminal.integrated.defaultProfile.linux": "bash"
+}

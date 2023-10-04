@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Qt6.5.3",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt1/Qt/6.5.3/gcc_64/include/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc"
+        }
+    ],
+    "version": 4
+}

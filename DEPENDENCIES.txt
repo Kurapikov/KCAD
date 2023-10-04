@@ -1,0 +1,11 @@
+gcc
+make
+build-essential
+libgl1-mesa-dev
+cmake
+ninja-build
+libxkbcommon-dev
+libvulkan-dev
+
+qt 6.5.3 (via qt.io online installer)
+
