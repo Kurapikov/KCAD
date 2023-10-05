@@ -19,5 +19,6 @@ bgfx (latest, via github download and following procedure:)
 7. make linux-debug64
 8. mkdir ../../../3rdparty/bgfx
 9. cp -R include ../../../3rdparty/bgfx/
-A. cp -R .build/linux64-_gcc/bin ../../../3rdparty/bgfx/
+A. cp -R ../bx/include/bx ../../../3rdparty/bgfx/include/
+B. cp -R .build/linux64-_gcc/bin ../../../3rdparty/bgfx/
 
