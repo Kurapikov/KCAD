@@ -10,7 +10,7 @@ project(KCAD VERSION 0.0.1 LANGUAGES CXX)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-list(APPEND CMAKE_PREFIX_PATH "/opt1/Qt/6.5.3/gcc_64")
+list(APPEND CMAKE_PREFIX_PATH "/opt/Qt/6.5.3/gcc_64")
 find_package(Qt6 COMPONENTS Core Quick Qml REQUIRED)
 qt_standard_project_setup()
 
