@@ -5,8 +5,9 @@ build-essential
 git
 ninja-build
 libgl1-mesa-dev
-libxkbcommon-dev
 libvulkan-dev
+libxcb-cursor0
+libxkbcommon-dev
 
 qt 6.5.3 (via qt.io online installer)
 
