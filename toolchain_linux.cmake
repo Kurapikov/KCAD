@@ -3,7 +3,7 @@
 message(STATUS USING_TOOLCHAIN:${CMAKE_TOOLCHAIN_FILE})
 
 # flags
-# set(DBGFLG "-gdwarf-2 -Og")
+set(DBGFLG "-gdwarf-2 -Og")
 # set(LIBFLG "-lc -lm -lnosys")
 set(LINKFLG "-Wl,-Map=target.map,--cref -Wl,--gc-sections")
 set(PROJECT_FLAGS "-Wall -Wshadow -fdata-sections -ffunction-sections")
