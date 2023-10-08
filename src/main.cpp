@@ -1,10 +1,11 @@
 #include <QGuiApplication>
+#include <QLoggingCategory>
 #include <QQmlApplicationEngine>
-#include <QQuickItem>
 #include <QQuickWindow>
 #include <QTimer>
 
 #include "bgfx/bgfx.h"
+#include "bgfx_bridge.hpp"
 
 int init_bgfx(WId nwh, uint32_t width, uint32_t height, bgfx::RendererType::Enum renderer_type) {
     bgfx::Init init_object;
@@ -19,7 +20,7 @@ int init_bgfx(WId nwh, uint32_t width, uint32_t height, bgfx::RendererType::Enum
     }
     return 0;
 }
-
+/*
 class MyTimer : public QObject
 {
     Q_OBJECT
@@ -58,9 +59,14 @@ bgfx::touch(0);
 bgfx::frame();
 qDebug() << "Out";
 }
+*/
 
 int main(int argc, char *argv[])
 {
+    // Debug output system information
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.scenegraph.general=true")); 
+    qSetMessagePattern("%{category}: %{message}");
+
     // Initialize main window
     QGuiApplication app(argc, argv);
     qDebug() << "Welcome to KCAD";
@@ -93,7 +99,7 @@ int main(int argc, char *argv[])
     // This is set to determine the size of the drawable surface
     bgfx::setViewRect(main_view_id, 0, 0, static_cast<std::uint16_t>(100), static_cast<std::uint16_t>(100));
 
-    MyTimer timer;
+    //MyTimer timer;
     return app.exec();
 }
 
