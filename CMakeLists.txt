@@ -34,26 +34,7 @@ file(GLOB_RECURSE PROJECT_SRC_LIST RELATIVE ${CMAKE_SOURCE_DIR}
     "src/qrc/*.qrc"
 )
 
-qt_add_qml_module(bgfx_bridge
-    URI bgfx_bridge
-    VERSION 1.0
-    SOURCES src/bgfx_bridge.hpp src/bgfx_bridge.cpp
-#    NO_PLUGIN
-)
-
-target_include_directories(bgfx_bridgeplugin
-     PUBLIC ${CMAKE_SOURCE_DIR}/src
-)
-
 add_executable(${PROJECT_NAME} ${PROJECT_SRC_LIST})
-
-target_link_libraries(bgfx_bridge PRIVATE
-    Qt6::Core
-    Qt6::Quick
-    Qt6::Qml
-    Qt6::Gui
-    Qt6::OpenGL
-)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
@@ -62,5 +43,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${BGFX_bgfxDebug}
     ${BGFX_bimgDebug}
     ${BGFX_bxDebug}
-    bgfx_bridge
 )

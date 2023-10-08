@@ -1,146 +1,83 @@
-#include <QOpenGLFunctions>
-#include <QOpenGLShaderProgram>
-#include <QQuickItem>
 #include <QQuickWindow>
-#include <QRunnable>
 
+#include "bgfx/bgfx.h"
 #include "bgfx_bridge.hpp"
 
-bgfx_bridge::bgfx_bridge()
-    : m_t(0)
-    , m_renderer(nullptr)
-{
-    connect(this, &QQuickItem::windowChanged, this, &bgfx_bridge::handleWindowChanged);
+int bgfx_bridge::init_bgfx(WId nwh, uint32_t width, uint32_t height, bgfx::RendererType::Enum renderer_type) {
+    bgfx::Init init_object;
+    init_object.platformData.nwh = reinterpret_cast<void *>(nwh);
+    init_object.resolution.width = static_cast<uint32_t>(width);
+    init_object.resolution.height = static_cast<uint32_t>(height);
+    init_object.resolution.reset = BGFX_RESET_VSYNC;
+    init_object.type = bgfx::RendererType::OpenGL;
+    if (!bgfx::init(init_object))
+    {
+        return 1;
+    }
+    return 0;
 }
 
-void bgfx_bridge::handleWindowChanged(QQuickWindow *win)
+bgfx_bridge::bgfx_bridge(QQuickWindow *win) : m_p_window(nullptr), m_is_bgfx_initialized(false)
 {
-    if (win) {
-        connect(win, &QQuickWindow::beforeSynchronizing, this, &bgfx_bridge::sync, Qt::DirectConnection);
-        connect(win, &QQuickWindow::sceneGraphInvalidated, this, &bgfx_bridge::cleanup, Qt::DirectConnection);
-        // Ensure we start with cleared to black. The bgfx_bridge's blend mode relies on this.
-        win->setColor(Qt::black);
-    }
+    m_p_window = win;
+    connect(win, &QQuickWindow::beforeSynchronizing, this, &bgfx_bridge::sync, Qt::DirectConnection);
+    connect(win, &QQuickWindow::sceneGraphInvalidated, this, &bgfx_bridge::cleanup, Qt::DirectConnection);
+    // Ensure we start with cleared to black. The bgfx_bridge's blend mode relies on this.
+    win->setColor(Qt::black);
 }
+
+void bgfx_bridge::paint()
+{
+    // Check if window size changed and update the view respectively
+    bgfx::reset(100, 100, BGFX_RESET_VSYNC);
+    bgfx::setViewRect(0, 0, 0, bgfx::BackbufferRatio::Equal);
+
+    // Ensure the view is redrawn even if no graphic commands are called
+    bgfx::touch(0);
+
+    // End the frame
+    bgfx::frame();
+    qDebug() << "Signal: beforeRenderPassRecording";
+}
+
+void bgfx_bridge::paint2()
+{
+    qDebug() << "Signal: beforeRendering";
+}
+
 
 void bgfx_bridge::sync()
 {
-    if (!m_renderer) {
-        m_renderer = new bgfx_bridge_renderer();
-        connect(window(), &QQuickWindow::beforeRendering, m_renderer, &bgfx_bridge_renderer::init, Qt::DirectConnection);
-        connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer, &bgfx_bridge_renderer::paint, Qt::DirectConnection);
+    if (!m_is_bgfx_initialized) {
+        // Initialize BGFX
+        // TODO: RendererType should read from .ini file.
+        // FIXME: Ubuntu in VMWare will report it supports Vulkan, but actually doesn't.
+        if (init_bgfx(m_wid, 100, 100, bgfx::RendererType::OpenGL) != 0)
+        {
+            return;
+        }
+        // TODO: These codes are test code
+        const bgfx::ViewId main_view_id = 0;
+        bgfx::setViewClear(main_view_id, BGFX_CLEAR_COLOR, 0x88888888);
+        bgfx::setViewRect(main_view_id, 0, 0, static_cast<std::uint16_t>(100), static_cast<std::uint16_t>(100));
+        connect(m_p_window, &QQuickWindow::beforeRenderPassRecording, this, &bgfx_bridge::paint, Qt::DirectConnection);
+        connect(m_p_window, &QQuickWindow::beforeRendering, this, &bgfx_bridge::paint2, Qt::DirectConnection);
+        m_is_bgfx_initialized = true;
     }
-    m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
-    m_renderer->setT(m_t);
-    m_renderer->setWindow(window());
 }
 void bgfx_bridge::cleanup()
 {
-    delete m_renderer;
-    m_renderer = nullptr;
+    return;
 }
-
-
-
-class BGFX_cleanup_job : public QRunnable
-{
-public:
-    BGFX_cleanup_job(bgfx_bridge_renderer *renderer) : m_renderer(renderer) { }
-    void run() override { delete m_renderer; }
-private:
-    bgfx_bridge_renderer *m_renderer;
-};
 
 void bgfx_bridge::releaseResources()
 {
-    window()->scheduleRenderJob(new BGFX_cleanup_job(m_renderer), QQuickWindow::BeforeSynchronizingStage);
-    m_renderer = nullptr;
+    m_is_bgfx_initialized = false;
 }
 
-bgfx_bridge_renderer::~bgfx_bridge_renderer()
+void bgfx_bridge::set_wid(WId wid)
 {
-    delete m_program;
-}
-
-void bgfx_bridge::setT(qreal t)
-{
-    if (t == m_t)
-        return;
-    m_t = t;
-    emit tChanged();
-    if (window())
-        window()->update();
-}
-
-void bgfx_bridge_renderer::init()
-{
-    if (!m_program) {
-        QSGRendererInterface *rif = m_window->rendererInterface();
-        Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL);
-
-        initializeOpenGLFunctions();
-
-        m_program = new QOpenGLShaderProgram();
-        m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                    "attribute highp vec4 vertices;"
-                                                    "varying highp vec2 coords;"
-                                                    "void main() {"
-                                                    "    gl_Position = vertices;"
-                                                    "    coords = vertices.xy;"
-                                                    "}");
-        m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                    "uniform lowp float t;"
-                                                    "varying highp vec2 coords;"
-                                                    "void main() {"
-                                                    "    lowp float i = 1. - (pow(abs(coords.x), 4.) + pow(abs(coords.y), 4.));"
-                                                    "    i = smoothstep(t - 0.8, t + 0.8, i);"
-                                                    "    i = floor(i * 20.) / 20.;"
-                                                    "    gl_FragColor = vec4(coords * .5 + .5, i, i);"
-                                                    "}");
-
-        m_program->bindAttributeLocation("vertices", 0);
-        m_program->link();
-
-    }
-}
-
-void bgfx_bridge_renderer::paint()
-{
-    // Play nice with the RHI. Not strictly needed when the scenegraph uses
-    // OpenGL directly.
-    m_window->beginExternalCommands();
-
-    m_program->bind();
-
-    m_program->enableAttributeArray(0);
-
-    float values[] = {
-        -1, -1,
-        1, -1,
-        -1, 1,
-        1, 1
-    };
-
-    // This example relies on (deprecated) client-side pointers for the vertex
-    // input. Therefore, we have to make sure no vertex buffer is bound.
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    m_program->setAttributeArray(0, GL_FLOAT, values, 2);
-    m_program->setUniformValue("t", (float) m_t);
-
-    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
-
-    glDisable(GL_DEPTH_TEST);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    m_program->disableAttributeArray(0);
-    m_program->release();
-
-    m_window->endExternalCommands();
+    m_wid = wid;
 }
 
 #include "bgfx_bridge.moc"
