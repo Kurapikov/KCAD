@@ -1,5 +1,5 @@
-// Derived from this Gist by Richard Gale:
-//     https://gist.github.com/RichardGale/6e2b74bc42b3005e08397236e4be0fd0
+// Derived from here:
+// https://github.com/pr0g/sdl-bgfx-imgui-starter/blob/main/bgfx-imgui/
 
 // ImGui BGFX binding
 
