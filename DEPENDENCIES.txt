@@ -1,15 +1,29 @@
-gcc
-make
-cmake
 build-essential
+cmake
+fcitx-libs-dev
+gcc
 git
-ninja-build
+gnome-desktop-testing
+libdbus-1-dev
+libdrm-dev
+libegl1-mesa-dev
+libxext-dev
+libgbm-dev
 libgl1-mesa-dev
+libgles2-mesa-dev
+libibus-1.0-dev
+libudev-dev
 libvulkan-dev
+libx11-dev
 libxcb-cursor0
+libxcursor-dev
+libxfixes-dev 
+libxi-dev
 libxkbcommon-dev
-
-qt 6.5.3 (via qt.io online installer)
+libxrandr-dev
+libxss-dev
+make
+ninja-build
 
 bgfx (latest, via github download and following procedure:)
 1. mkdir -p 3rdparty_build/bgfx
@@ -23,4 +37,20 @@ bgfx (latest, via github download and following procedure:)
 9. cp -R include ../../../3rdparty/bgfx/
 A. cp -R ../bx/include/bx ../../../3rdparty/bgfx/include/
 B. cp -R .build/linux64_gcc/bin ../../../3rdparty/bgfx/
+
+SDL2 (2.28.4)
+1. cd 3rdparty_build
+2. git clone https://github.com/libsdl-org/SDL.git -b release-2.28.4 --depth 1
+3. cd SDL
+4. mkdir build
+5. cd build
+6. ../configure --enable-shared=no prefix=$PWD/../../../3rdparty/sdl2
+7. make -j8
+8. make install
+9. make clean
+
+Dear ImGui (1.89.9 Docking)
+Dear ImGui is a git submodule of this repository.
+So you should use "git submodule init" and "git submodule update" to fill the src folder.
+Don't forget to checkout branch "v1.89.9-docking"!!
 
