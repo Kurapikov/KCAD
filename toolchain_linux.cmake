@@ -28,7 +28,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXE_LINKER_FLAGS "${LIBFLG} ${LINKFLG}")
 
 # other tools
-#set(QT6_WINDEPLOY windeployqt.exe)
 set(CMAKE_OBJCOPY objcopy)
 set(CMAKE_OBJDUMP objdump)
 set(CMAKE_SIZE size)
