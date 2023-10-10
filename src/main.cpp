@@ -184,6 +184,7 @@ int main(int, char**)
         // Rendering
         ImGui::Render();
         ImGui_Implbgfx_RenderDrawLists(ImGui::GetDrawData());
+        bgfx::touch(0);
         bgfx::frame();
     }
 
