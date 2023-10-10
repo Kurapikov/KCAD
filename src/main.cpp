@@ -10,6 +10,8 @@
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
 
+#include "simple_ini/SimpleIni.h"
+
 #include "imgui_impl_bgfx/imgui_impl_bgfx.hpp"
 #include "spdlog/spdlog.h"
 
@@ -17,6 +19,7 @@ struct WindowContext {
     int width;
     int height;
     SDL_Window * window;
+    
 };
 
 // Main code

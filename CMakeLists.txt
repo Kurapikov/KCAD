@@ -14,6 +14,7 @@ file(GLOB PROJECT_SRC_LIST RELATIVE ${CMAKE_SOURCE_DIR}
     "src/*.cpp"
     "src/imgui/*.cpp"
     "src/imgui_impl_bgfx/*.cpp"
+    "src/simple_ini/*.c"
 )
 
 # Add BGFX library
