@@ -38,6 +38,10 @@ if (LINUX)
     )
 endif (LINUX)
 
+# Add spdlog library
+set(spdlog_DIR ${CMAKE_SOURCE_DIR}/3rdparty/spdlog/lib/cmake/spdlog)
+find_package(spdlog REQUIRED)
+
 # Add Vulkan library
 find_package(Vulkan REQUIRED)
 
@@ -48,5 +52,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${BGFX_bimgDebug}
     ${BGFX_bxDebug}
     ${SDL2_LIBRARIES}
-    OpenGL::GL
+    spdlog::spdlog
 )

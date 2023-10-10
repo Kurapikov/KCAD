@@ -1,14 +1,7 @@
-// Learn about Dear ImGui:
-// - FAQ                  https://dearimgui.com/faq
-// - Getting Started      https://dearimgui.com/getting-started
-// - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
-
 #include <stdio.h>
 
 #include "SDL.h"
 #include "SDL_syswm.h"
-#include "SDL_opengl.h"
-#include "SDL_vulkan.h"
 
 #include "bx/platform.h"
 #include "bgfx/platform.h"
@@ -16,9 +9,9 @@
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
-#include "backends/imgui_impl_opengl3.h"
 
 #include "imgui_impl_bgfx/imgui_impl_bgfx.hpp"
+#include "spdlog/spdlog.h"
 
 struct WindowContext {
     int width;
@@ -29,41 +22,23 @@ struct WindowContext {
 // Main code
 int main(int, char**)
 {
+    spdlog::set_pattern("[%H:%M:%S.%e] [%^-%L-%$] [%t] %v");
+    spdlog::info("Welcome to spdlog!");
     WindowContext wctx = {1280, 720};
 
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
     {
-        printf("Error: %s\n", SDL_GetError());
+        spdlog::error("SDL_Init() Error: {}", SDL_GetError());
         return -1;
     }
-
-    // Decide GL+GLSL versions
-#if defined(__APPLE__)
-    // GL 4.1 Core + GLSL 4.10
-    const char* glsl_version = "#version 410";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#else
-    // GL 4.3 + GLSL 4.30
-    const char* glsl_version = "#version 430";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-#endif
-
+    spdlog::error("SDL_Init() Error: {}", "123456sst");
     // From 2.0.18: Enable native IME.
 #ifdef SDL_HINT_IME_SHOW_UI
     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 #endif
 
     // Create window with graphics context
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     wctx.window = SDL_CreateWindow("KCAD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, wctx.width, wctx.height, window_flags);
 
@@ -161,6 +136,7 @@ int main(int, char**)
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+            bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, ImGui::ColorConvertFloat4ToU32(ImVec4(clear_color.w, clear_color.z, clear_color.y, clear_color.x)), 1.0f, 0);
 
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
                 counter++;
