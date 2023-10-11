@@ -1,2 +1,7 @@
-SDL/
-spdlog/
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!CMakeLists.txt
+

@@ -88,9 +88,9 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_Implbgfx_Init(255);
 #if BX_PLATFORM_WINDOWS
-    ImGui_ImplSDL2_InitForD3D(window);
+    ImGui_ImplSDL2_InitForD3D(wctx.window);
 #elif BX_PLATFORM_OSX
-    ImGui_ImplSDL2_InitForMetal(window);
+    ImGui_ImplSDL2_InitForMetal(wctx.window);
 #elif BX_PLATFORM_LINUX
     ImGui_ImplSDL2_InitForOpenGL(wctx.window, nullptr);
 #endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX

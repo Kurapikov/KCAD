@@ -1,11 +1,30 @@
 cmake_minimum_required(VERSION 3.25)
 
+project(KCAD VERSION 0.0.1 LANGUAGES CXX)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain_linux.cmake)
-set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "ON")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain_linux.cmake)
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain_macos.cmake)
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain_windows.cmake)
+endif()
+include(${CMAKE_TOOLCHAIN_FILE})
 
-project(KCAD VERSION 0.0.1 LANGUAGES CXX)
+# assume built-in pthreads on MacOS
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+    set(CMAKE_HAVE_THREADS_LIBRARY 1)
+    set(CMAKE_USE_WIN32_THREADS_INIT 0)
+    set(CMAKE_USE_PTHREADS_INIT 1)
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+endif()
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
@@ -31,20 +50,28 @@ find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 find_package(OpenGL REQUIRED)
 include_directories(${CMAKE_SOURCE_DIR}/src/imgui)
-if (LINUX)
-    list(APPEND PROJECT_SRC_LIST
-        ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_opengl3.cpp
-        ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_vulkan.cpp
-        ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_sdl2.cpp
-    )
-endif (LINUX)
+list(APPEND PROJECT_SRC_LIST
+    ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_sdl2.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_opengl3.cpp
+)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND PROJECT_SRC_LIST ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_vulkan.cpp)
+endif ()
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    list(APPEND PROJECT_SRC_LIST ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_metal.mm)
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    list(APPEND PROJECT_SRC_LIST ${CMAKE_SOURCE_DIR}/src/imgui/backends/imgui_impl_dx12.cpp)
+endif()
 
 # Add spdlog library
 set(spdlog_DIR ${CMAKE_SOURCE_DIR}/3rdparty/spdlog/lib/cmake/spdlog)
 find_package(spdlog REQUIRED)
 
 # Add Vulkan library
-find_package(Vulkan REQUIRED)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(Vulkan REQUIRED)
+endif()
 
 add_executable(${PROJECT_NAME} ${PROJECT_SRC_LIST})
 
@@ -55,3 +82,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${SDL2_LIBRARIES}
     spdlog::spdlog
 )
+
