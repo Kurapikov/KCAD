@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 
 static const uint8_t fs_ocornut_imgui_glsl[189] =

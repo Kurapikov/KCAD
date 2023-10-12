@@ -4,6 +4,7 @@
 #include "SDL_syswm.h"
 
 #include "bx/platform.h"
+#include <bx/math.h>
 #include "bgfx/platform.h"
 #include "bgfx/bgfx.h"
 
@@ -14,21 +15,65 @@
 
 #include "imgui_impl_bgfx/imgui_impl_bgfx.hpp"
 #include "spdlog/spdlog.h"
+#include "utils.hpp"
+
+struct PosColorVertex
+{
+    float x;
+    float y;
+    float z;
+    uint32_t abgr;
+};
+
+static PosColorVertex cube_vertices[] = {
+    {-1.0f, 1.0f, 1.0f, 0xff000000},   {1.0f, 1.0f, 1.0f, 0xff0000ff},
+    {-1.0f, -1.0f, 1.0f, 0xff00ff00},  {1.0f, -1.0f, 1.0f, 0xff00ffff},
+    {-1.0f, 1.0f, -1.0f, 0xffff0000},  {1.0f, 1.0f, -1.0f, 0xffff00ff},
+    {-1.0f, -1.0f, -1.0f, 0xffffff00}, {1.0f, -1.0f, -1.0f, 0xffffffff},
+};
+
+static const uint16_t cube_tri_list[] = {
+    0, 1, 2, 1, 3, 2, 4, 6, 5, 5, 6, 7, 0, 2, 4, 4, 2, 6,
+    1, 5, 3, 5, 7, 3, 0, 4, 1, 4, 5, 1, 2, 3, 6, 6, 3, 7,
+};
+
+static bgfx::ShaderHandle create_shader(
+    const std::string& shader, const char* name)
+{
+    const bgfx::Memory* mem = bgfx::copy(shader.data(), shader.size());
+    const bgfx::ShaderHandle handle = bgfx::createShader(mem);
+    bgfx::setName(handle, name);
+    return handle;
+}
 
 struct WindowContext {
     int width;
     int height;
     SDL_Window * window;
-    
+
+    bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
+    bgfx::VertexBufferHandle vbh = BGFX_INVALID_HANDLE;
+    bgfx::IndexBufferHandle ibh = BGFX_INVALID_HANDLE;
+
+    float cam_pitch = 0.0f;
+    float cam_yaw = 0.0f;
+    float rot_scale = 0.01f;
+
+    int prev_mouse_x = 0;
+    int prev_mouse_y = 0;
+
+    std::filesystem::path exe_file_path;
 };
 
-// Main code
 int main(int, char**)
 {
     spdlog::set_pattern("[%H:%M:%S.%e] [%^-%L-%$] [%t] %v");
     spdlog::info("Welcome to spdlog!");
+
     WindowContext wctx = {1280, 720};
 
+    // Setup environments
+    wctx.exe_file_path = get_exe_file_path();
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
     {
@@ -110,6 +155,38 @@ int main(int, char**)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    // Draw something
+    bgfx::VertexLayout pos_col_vert_layout;
+    pos_col_vert_layout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+        .end();
+    bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(
+        bgfx::makeRef(cube_vertices, sizeof(cube_vertices)),
+        pos_col_vert_layout);
+    bgfx::IndexBufferHandle ibh = bgfx::createIndexBuffer(
+        bgfx::makeRef(cube_tri_list, sizeof(cube_tri_list)));
+    const std::string shader_root = wctx.exe_file_path / "shaders/";
+    std::string vshader;
+    if (!fileops::read_file(shader_root + "v_simple.bin", vshader)) {
+        printf("Could not find shader vertex shader (ensure shaders have been "
+               "compiled).\n"
+               "Run compile-shaders-<platform>.sh/bat\n");
+        return 1;
+    }
+    std::string fshader;
+    if (!fileops::read_file(shader_root + "f_simple.bin", fshader)) {
+        printf("Could not find shader fragment shader (ensure shaders have "
+               "been compiled).\n"
+               "Run compile-shaders-<platform>.sh/bat\n");
+        return 1;
+    }
+    bgfx::ShaderHandle vsh = create_shader(vshader, "vshader");
+    bgfx::ShaderHandle fsh = create_shader(fshader, "fshader");
+    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
+    wctx.program = program;
+    wctx.vbh = vbh;
+    wctx.ibh = ibh;
     // Main loop
     bool done = false;
     while (!done)
@@ -171,11 +248,55 @@ int main(int, char**)
         // Rendering
         ImGui::Render();
         ImGui_Implbgfx_RenderDrawLists(ImGui::GetDrawData());
+        if (!ImGui::GetIO().WantCaptureMouse) {
+            // simple input code for orbit camera
+            int mouse_x, mouse_y;
+            const int buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+            if ((buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0) {
+                int delta_x = mouse_x - wctx.prev_mouse_x;
+                int delta_y = mouse_y - wctx.prev_mouse_y;
+                wctx.cam_yaw += float(-delta_x) * wctx.rot_scale;
+                wctx.cam_pitch += float(-delta_y) * wctx.rot_scale;
+            }
+            wctx.prev_mouse_x = mouse_x;
+            wctx.prev_mouse_y = mouse_y;
+        }
+
+        float cam_rotation[16];
+        bx::mtxRotateXYZ(cam_rotation, wctx.cam_pitch, wctx.cam_yaw, 0.0f);
+
+        float cam_translation[16];
+        bx::mtxTranslate(cam_translation, 0.0f, 0.0f, -5.0f);
+
+        float cam_transform[16];
+        bx::mtxMul(cam_transform, cam_translation, cam_rotation);
+
+        float view[16];
+        bx::mtxInverse(view, cam_transform);
+
+        float proj[16];
+        bx::mtxProj(
+            proj, 60.0f, float(wctx.width) / float(wctx.height), 0.1f,
+            100.0f, bgfx::getCaps()->homogeneousDepth);
+
+        bgfx::setViewTransform(0, view, proj);
+
+        float model[16];
+        bx::mtxIdentity(model);
+        bgfx::setTransform(model);
+
+        bgfx::setVertexBuffer(0, wctx.vbh);
+        bgfx::setIndexBuffer(wctx.ibh);
+
+        bgfx::submit(0, wctx.program);
         bgfx::touch(0);
         bgfx::frame();
     }
 
     // Cleanup
+    bgfx::destroy(vbh);
+    bgfx::destroy(ibh);
+    bgfx::destroy(program);
     ImGui_ImplSDL2_Shutdown();
     ImGui_Implbgfx_Shutdown();
     ImGui::DestroyContext();

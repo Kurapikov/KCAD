@@ -1,5 +1,6 @@
 # NOTE
 1. Wayland is not tested yet. Please use X11 on Linux.
+2. Windows is not ported yet.
 
 # BUILD (Linux & macos)
 git clone https://github.com/Kurapikov/KCAD.git  
@@ -23,6 +24,9 @@ Then you can find KCAD executable under KCAD/build/bin
 
 # TASKS
 - [X] Port to MacOS.
+- [ ] More flexible 3rd-party build script, check downloads and installations exist first.
+- [ ] Fix VSCode environment.
+- [ ] Use Ninja as backends.
 - [ ] Port to Windows.
 - [ ] Integrate with github CI tools to verify cross platform build.
 - [ ] Use SimpleIni lib to load/save system preference.

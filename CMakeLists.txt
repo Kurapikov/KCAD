@@ -73,7 +73,40 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_package(Vulkan REQUIRED)
 endif()
 
+# Compile shaders
+set(SHADER_SOURCES
+    "${CMAKE_SOURCE_DIR}/src/shaders/f_simple.sc#fragment"
+    "${CMAKE_SOURCE_DIR}/src/shaders/v_simple.sc#vertex"
+)
+file(MAKE_DIRECTORY ${CMAKE_SHADER_OUTPUT_DIRECTORY})
+foreach(SHADER_INFO ${SHADER_SOURCES})
+    string(REGEX REPLACE "^([^#]+)#(.+)$" "\\1" SHADER_SOURCE ${SHADER_INFO})
+    string(REGEX REPLACE "^([^#]+)#(.+)$" "\\2" SHADER_TYPE ${SHADER_INFO})
+    get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME_WE)
+    set(SHADER_OUTPUT ${CMAKE_SHADER_OUTPUT_DIRECTORY}/${SHADER_NAME}.bin)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(SHADERC_COMMAND ${CMAKE_SOURCE_DIR}/3rdparty/bgfx/bin/shadercDebug -f ${SHADER_SOURCE} -o ${SHADER_OUTPUT} --platform linux --verbose -i ./ -p spirv --type ${SHADER_TYPE})
+    endif ()
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(SHADERC_COMMAND ${CMAKE_SOURCE_DIR}/3rdparty/bgfx/bin/shadercDebug -f ${SHADER_SOURCE} -o ${SHADER_OUTPUT} --platform osx --verbose -i ./ -p metal --type ${SHADER_TYPE})
+    endif()
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(SHADERC_COMMAND ${CMAKE_SOURCE_DIR}/3rdparty/bgfx/bin/shadercDebug.exe -f ${SHADER_SOURCE} -o ${SHADER_OUTPUT} --platform windows --verbose -i ./ -p s_5_0 --type ${SHADER_TYPE})
+    endif()
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT}
+        COMMAND ${SHADERC_COMMAND}
+        DEPENDS ${SHADER_SOURCE}
+        COMMENT "Compiling ${SHADER_TYPE} shader ${SHADER_SOURCE}"
+    )
+    list(APPEND SHADER_OUTPUTS ${SHADER_OUTPUT})
+endforeach()
+
+add_custom_target(Shaders ALL DEPENDS ${SHADER_OUTPUTS})
+
 add_executable(${PROJECT_NAME} ${PROJECT_SRC_LIST})
+
+add_dependencies(${PROJECT_NAME} Shaders)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${BGFX_bgfxDebug}

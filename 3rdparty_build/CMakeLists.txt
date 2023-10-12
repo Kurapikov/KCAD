@@ -33,13 +33,16 @@ add_custom_command(TARGET build_3rdparty COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DI
 add_custom_command(TARGET build_3rdparty COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/bgfx/bx/include/bx ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/bgfx/include/)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_custom_command(TARGET build_3rdparty COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/bgfx/bgfx/.build/linux64_gcc/bin ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/bgfx/)
+    add_custom_command(TARGET build_3rdparty COMMAND rm -R ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/bgfx/bin/example*)
 endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     add_custom_command(TARGET build_3rdparty COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/bgfx/bgfx/.build/osx-x64/bin ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/bgfx/)
+    add_custom_command(TARGET build_3rdparty COMMAND rm -R ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/bgfx/bin/example*)
 endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     add_custom_command(TARGET build_3rdparty COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/bgfx/bgfx/.build/win64_mingw-gcc/bin ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/bgfx/)
 endif()
+add_custom_command(TARGET build_3rdparty COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/bgfx/bgfx/src/bgfx_shader.sh ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/bgfx/include/bgfx/)
 
 # SDL2
 add_custom_command(TARGET build_3rdparty COMMAND git clone https://github.com/libsdl-org/SDL.git -b release-2.28.4 --depth 1 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
