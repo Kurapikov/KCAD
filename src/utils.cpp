@@ -13,7 +13,6 @@
 
 std::filesystem::path get_exe_file_path() {
 #if BX_PLATFORM_WINDOWS
-    // Windows specific
     wchar_t szPath[MAX_PATH];
     GetModuleFileNameW( NULL, szPath, MAX_PATH );
 #elif BX_PLATFORM_OSX
@@ -23,7 +22,6 @@ std::filesystem::path get_exe_file_path() {
         return std::filesystem::path{szPath}.parent_path() / ""; // to finish the folder path with (back)slash
     return {};  // some error
 #elif BX_PLATFORM_LINUX
-    // Linux specific
     char szPath[PATH_MAX];
     ssize_t count = readlink( "/proc/self/exe", szPath, PATH_MAX );
     if( count < 0 || count >= PATH_MAX )
