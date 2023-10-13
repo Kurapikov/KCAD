@@ -15,6 +15,8 @@
 
 #include "imgui_impl_bgfx/imgui_impl_bgfx.hpp"
 #include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
 #include "utils.hpp"
 
 struct PosColorVertex
@@ -65,10 +67,16 @@ struct WindowContext {
     std::filesystem::path exe_file_path;
 };
 
+spdlog::logger *kcad_logger;
+
 int main(int, char**)
 {
-    spdlog::set_pattern("[%H:%M:%S.%e] [%^-%L-%$] [%t] %v");
-    spdlog::info("Welcome to spdlog!");
+    std::vector<spdlog::sink_ptr> sinks;
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("KCAD.log"));
+    kcad_logger = new spdlog::logger("name", begin(sinks), end(sinks));
+    kcad_logger->set_pattern("[%H:%M:%S.%e] [%^-%L-%$] [%t] %v");
+    kcad_logger->info("Welcome to spdlog!");
 
     WindowContext wctx = {1280, 720};
 
@@ -77,10 +85,10 @@ int main(int, char**)
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
     {
-        spdlog::error("SDL_Init() Error: {}", SDL_GetError());
+        kcad_logger->error("SDL_Init() Error: {}", SDL_GetError());
         return -1;
     }
-    spdlog::error("SDL_Init() Error: {}", "123456sst");
+    kcad_logger->error("SDL_Init() Error: {}", "123456sst");
     // From 2.0.18: Enable native IME.
 #ifdef SDL_HINT_IME_SHOW_UI
     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
@@ -303,6 +311,6 @@ int main(int, char**)
     bgfx::shutdown();
     SDL_DestroyWindow(wctx.window);
     SDL_Quit();
-
+    delete (kcad_logger);
     return 0;
 }

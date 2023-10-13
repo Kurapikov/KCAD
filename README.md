@@ -30,7 +30,7 @@ Then you can find KCAD executable under KCAD/build/bin
 - [ ] Port to Windows.
 - [ ] Integrate with github CI tools to verify cross platform build.
 - [ ] Use SimpleIni lib to load/save system preference.
-- [ ] Config spdlog lib to get a singleton mt_safe logger. Would be better to toggle both file/console log though .ini file.
+- [X] Config spdlog lib to get a singleton mt_safe logger. Would be better to toggle both file/console log though .ini file.
 - [ ] Draw some triangles.
 - [ ] Put BGFX and ImGUI into different threads.
 - [ ] Change sync mode to render "on demand" from "60Hz V-Sync".
