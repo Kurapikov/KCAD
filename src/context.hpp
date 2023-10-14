@@ -12,6 +12,8 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
 
+#include "ui/ui.hpp"
+
 struct kcad_context {
     //  PART1 system related
     std::filesystem::path exe_file_path;
@@ -32,8 +34,13 @@ struct kcad_context {
 
     int prev_mouse_x = 0;
     int prev_mouse_y = 0;
+
+    struct ui_status *p_ui_stat;
+    ImGuiIO *p_imgui_io;
 };
 
 inline struct kcad_context g_ctxt;
 
 void init_app_context();
+
+void deinit_app_context();
