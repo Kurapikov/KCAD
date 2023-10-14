@@ -16,6 +16,7 @@
 #include "utils.hpp"
 #include "context.hpp"
 #include "ui/ui.hpp"
+#include "workaround_macos_bgfx_mt.h"
 
 struct PosColorVertex
 {
@@ -159,7 +160,8 @@ int main(int, char**)
 #if BX_PLATFORM_WINDOWS
     pd.nwh = wmi.info.win.window;
 #elif BX_PLATFORM_OSX
-    pd.nwh = wmi.info.cocoa.window;
+    // WORKAROUND: https://github.com/bkaradzic/bgfx/issues/2036
+    pd.nwh = workaround_cbSetupMetalLayer(wmi.info.cocoa.window);
 #elif BX_PLATFORM_LINUX
     pd.ndt = wmi.info.x11.display;
     pd.nwh = (void*)(uintptr_t)wmi.info.x11.window;

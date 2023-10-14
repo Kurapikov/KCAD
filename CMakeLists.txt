@@ -36,6 +36,12 @@ file(GLOB PROJECT_SRC_LIST RELATIVE ${CMAKE_SOURCE_DIR}
     "src/simple_ini/*.c"
     "src/ui/*.cpp"
 )
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    file(GLOB DARWIN_MM_SRC_LIST RELATIVE ${CMAKE_SOURCE_DIR} 
+        "src/*.mm"
+    )
+    list(APPEND PROJECT_SRC_LIST ${DARWIN_MM_SRC_LIST})
+endif()
 
 # Add BGFX library
 include_directories(${CMAKE_SOURCE_DIR}/3rdparty/bgfx/include)
