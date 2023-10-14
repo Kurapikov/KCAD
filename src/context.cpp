@@ -15,6 +15,7 @@ void init_app_context()
     // Init logger
     std::vector<spdlog::sink_ptr> sinks;
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    // TODO: Create KCAD log within same folder the executable file belongs to.
     sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("KCAD.log"));
     g_ctxt.p_logger = new spdlog::logger("name", begin(sinks), end(sinks));
     g_ctxt.p_logger->set_pattern("[%H:%M:%S.%e] [%^-%L-%$] [%t] %v");

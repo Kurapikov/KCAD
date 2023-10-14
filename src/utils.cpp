@@ -9,6 +9,7 @@
 #include <climits>
 #elif BX_PLATFORM_LINUX
 #include <unistd.h>
+#include "linux/limits.h"
 #endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
 
 std::filesystem::path get_exe_file_path() {
@@ -27,5 +28,6 @@ std::filesystem::path get_exe_file_path() {
     if( count < 0 || count >= PATH_MAX )
         return {}; // some error
     szPath[count] = '\0';
+    return std::filesystem::path{ szPath }.parent_path() / ""; // to finish the folder path with (back)slash
 #endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
 }
