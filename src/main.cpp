@@ -46,111 +46,9 @@ static bgfx::ShaderHandle create_shader(
     return handle;
 }
 
-int main(int, char**)
+void main_loop()
 {
-    init_app_context();
-
-    // Setup SDL
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
-    {
-        g_ctxt.p_logger->error("SDL_Init() Error: {}", SDL_GetError());
-        return -1;
-    }
-    // From 2.0.18: Enable native IME.
-#ifdef SDL_HINT_IME_SHOW_UI
-    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-#endif
-
-    // Create window with graphics context
-#if BX_PLATFORM_WINDOWS
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-#elif BX_PLATFORM_OSX
-    //SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_METAL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    //WORKAROUND: https://github.com/ocornut/imgui/issues/5931
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_METAL | SDL_WINDOW_RESIZABLE);
-#elif BX_PLATFORM_LINUX
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-#endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
-    g_ctxt.window = SDL_CreateWindow("KCAD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, g_ctxt.width, g_ctxt.height, window_flags);
-
-    // Setup BGFX
-    SDL_SysWMinfo wmi;
-    SDL_VERSION(&wmi.version);
-    if (!SDL_GetWindowWMInfo(g_ctxt.window, &wmi)) {
-        printf(
-            "SDL_SysWMinfo could not be retrieved. SDL_Error: %s\n",
-            SDL_GetError());
-        return 1;
-    }
-    bgfx::renderFrame(); // single threaded mode
-    bgfx::PlatformData pd{};
-#if BX_PLATFORM_WINDOWS
-    pd.nwh = wmi.info.win.window;
-#elif BX_PLATFORM_OSX
-    pd.nwh = wmi.info.cocoa.window;
-#elif BX_PLATFORM_LINUX
-    pd.ndt = wmi.info.x11.display;
-    pd.nwh = (void*)(uintptr_t)wmi.info.x11.window;
-#endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
-
-    bgfx::Init bgfx_init;
-    bgfx_init.type = bgfx::RendererType::Count; // auto choose renderer
-    bgfx_init.resolution.width = g_ctxt.width;
-    bgfx_init.resolution.height = g_ctxt.height;
-    bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
-    bgfx_init.platformData = pd;
-    bgfx::init(bgfx_init);
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
-    bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsLight();
-
-    // Setup Platform/Renderer backends
-    ImGui_Implbgfx_Init(255);
-#if BX_PLATFORM_WINDOWS
-    ImGui_ImplSDL2_InitForD3D(g_ctxt.window);
-#elif BX_PLATFORM_OSX
-    ImGui_ImplSDL2_InitForMetal(g_ctxt.window);
-#elif BX_PLATFORM_LINUX
-    ImGui_ImplSDL2_InitForOpenGL(g_ctxt.window, nullptr);
-#endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
-
-    // TODO: Load Fonts
-
-    // bgfx draw something
-    bgfx::VertexLayout pos_col_vert_layout;
-    pos_col_vert_layout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-        .end();
-    bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(
-        bgfx::makeRef(cube_vertices, sizeof(cube_vertices)),
-        pos_col_vert_layout);
-    bgfx::IndexBufferHandle ibh = bgfx::createIndexBuffer(
-        bgfx::makeRef(cube_tri_list, sizeof(cube_tri_list)));
-    const std::string shader_root = g_ctxt.exe_file_path / "shaders/";
-    std::string vshader;
-    if (!fileops::read_file(shader_root + "v_simple.bin", vshader)) {
-        printf("Could not find shader vertex shader (ensure shaders have been "
-               "compiled).\n"
-               "Run compile-shaders-<platform>.sh/bat\n");
-        return 1;
-    }
-    std::string fshader;
-    if (!fileops::read_file(shader_root + "f_simple.bin", fshader)) {
-        printf("Could not find shader fragment shader (ensure shaders have "
-               "been compiled).\n"
-               "Run compile-shaders-<platform>.sh/bat\n");
-        return 1;
-    }
-    bgfx::ShaderHandle vsh = create_shader(vshader, "vshader");
-    bgfx::ShaderHandle fsh = create_shader(fshader, "fshader");
-    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
-    g_ctxt.program = program;
-    g_ctxt.vbh = vbh;
-    g_ctxt.ibh = ibh;
-    // Main loop
+        // Main loop
     bool done = false;
     while (!done)
     {
@@ -219,6 +117,113 @@ int main(int, char**)
         bgfx::touch(0);
         bgfx::frame();
     }
+}
+
+int main(int, char**)
+{
+    init_app_context();
+
+    // Setup SDL
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+    {
+        g_ctxt.p_logger->error("SDL_Init() Error: {}", SDL_GetError());
+        return -1;
+    }
+    // From 2.0.18: Enable native IME.
+#ifdef SDL_HINT_IME_SHOW_UI
+    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+#endif
+
+    // Create window with graphics context
+#if BX_PLATFORM_WINDOWS
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+#elif BX_PLATFORM_OSX
+    //SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_METAL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    //WORKAROUND: https://github.com/ocornut/imgui/issues/5931
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_METAL | SDL_WINDOW_RESIZABLE);
+#elif BX_PLATFORM_LINUX
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+#endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
+    g_ctxt.window = SDL_CreateWindow("KCAD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, g_ctxt.width, g_ctxt.height, window_flags);
+
+    // Setup BGFX
+    SDL_SysWMinfo wmi;
+    SDL_VERSION(&wmi.version);
+    if (!SDL_GetWindowWMInfo(g_ctxt.window, &wmi)) {
+        printf(
+            "SDL_SysWMinfo could not be retrieved. SDL_Error: %s\n",
+            SDL_GetError());
+        return 1;
+    }
+    bgfx::PlatformData pd{};
+#if BX_PLATFORM_WINDOWS
+    pd.nwh = wmi.info.win.window;
+#elif BX_PLATFORM_OSX
+    pd.nwh = wmi.info.cocoa.window;
+#elif BX_PLATFORM_LINUX
+    pd.ndt = wmi.info.x11.display;
+    pd.nwh = (void*)(uintptr_t)wmi.info.x11.window;
+#endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
+
+    bgfx::Init bgfx_init;
+    bgfx_init.type = bgfx::RendererType::Count; // auto choose renderer
+    bgfx_init.resolution.width = g_ctxt.width;
+    bgfx_init.resolution.height = g_ctxt.height;
+    bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
+    bgfx_init.platformData = pd;
+    bgfx::init(bgfx_init);
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
+    bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsLight();
+
+    // Setup Platform/Renderer backends
+    ImGui_Implbgfx_Init(255);
+#if BX_PLATFORM_WINDOWS
+    ImGui_ImplSDL2_InitForD3D(g_ctxt.window);
+#elif BX_PLATFORM_OSX
+    ImGui_ImplSDL2_InitForMetal(g_ctxt.window);
+#elif BX_PLATFORM_LINUX
+    ImGui_ImplSDL2_InitForOpenGL(g_ctxt.window, nullptr);
+#endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
+
+    // TODO: Load Fonts
+
+    // bgfx draw something
+    bgfx::VertexLayout pos_col_vert_layout;
+    pos_col_vert_layout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+        .end();
+    bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(
+        bgfx::makeRef(cube_vertices, sizeof(cube_vertices)),
+        pos_col_vert_layout);
+    bgfx::IndexBufferHandle ibh = bgfx::createIndexBuffer(
+        bgfx::makeRef(cube_tri_list, sizeof(cube_tri_list)));
+    const std::string shader_root = g_ctxt.exe_file_path / "shaders/";
+    std::string vshader;
+    if (!fileops::read_file(shader_root + "v_simple.bin", vshader)) {
+        printf("Could not find shader vertex shader (ensure shaders have been "
+               "compiled).\n"
+               "Run compile-shaders-<platform>.sh/bat\n");
+        return 1;
+    }
+    std::string fshader;
+    if (!fileops::read_file(shader_root + "f_simple.bin", fshader)) {
+        printf("Could not find shader fragment shader (ensure shaders have "
+               "been compiled).\n"
+               "Run compile-shaders-<platform>.sh/bat\n");
+        return 1;
+    }
+    bgfx::ShaderHandle vsh = create_shader(vshader, "vshader");
+    bgfx::ShaderHandle fsh = create_shader(fshader, "fshader");
+    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
+    g_ctxt.program = program;
+    g_ctxt.vbh = vbh;
+    g_ctxt.ibh = ibh;
+
+    main_loop();
 
     // Cleanup
     bgfx::destroy(vbh);

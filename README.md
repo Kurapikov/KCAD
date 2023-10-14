@@ -25,14 +25,14 @@ Then you can find KCAD executable under KCAD/build/bin
 # TASKS
 - [X] Port to MacOS.
 - [ ] More flexible 3rd-party build script, check downloads and installations exist first.
-- [ ] Fix VSCode environment.
-- [ ] Use Ninja as backends.
+- [ ] Fix macos VSCode environment (especially lldb).
+- [ ] Use Ninja as backends (Command line "cmake ..").
 - [ ] Port to Windows.
 - [ ] Integrate with github CI tools to verify cross platform build.
 - [ ] Use SimpleIni lib to load/save system preference.
 - [X] Config spdlog lib to get a singleton mt_safe logger. Would be better to toggle both file/console log though .ini file.
-- [ ] Draw some triangles.
-- [ ] Put BGFX and ImGUI into different threads.
+- [X] Draw some triangles.
+- [X] Put BGFX and ImGUI into different threads.
 - [ ] Change sync mode to render "on demand" from "60Hz V-Sync".
 - [ ] Integrate bgfx with OCCT, open and draw a step file.
 
