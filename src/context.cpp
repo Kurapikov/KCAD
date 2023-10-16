@@ -25,7 +25,7 @@ void init_app_context()
     g_ctxt.p_imgui_io = &(ImGui::GetIO());// (void)g_ctxt.imgui_io;
     g_ctxt.p_imgui_io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     g_ctxt.p_imgui_io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
+    g_ctxt.p_allocator = new bx::DefaultAllocator;
     // TODO: this is temp code
     g_ctxt.width=1440;
     g_ctxt.height=900;
@@ -33,5 +33,6 @@ void init_app_context()
 
 void deinit_app_context()
 {
+    delete (g_ctxt.p_allocator);
     delete (g_ctxt.p_logger);
 }

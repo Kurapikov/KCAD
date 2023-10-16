@@ -2,6 +2,7 @@
 
 #include <filesystem>
 
+#include "bx/allocator.h"
 #include "bgfx/bgfx.h"
 
 #include "SDL.h"
@@ -24,9 +25,14 @@ struct kcad_context {
     int height;
     SDL_Window * window;
 
+    bx::DefaultAllocator *p_allocator;
+    bgfx::UniformHandle texture_sampler;
+    bgfx::TextureHandle temp_texture;
+    bgfx::ProgramHandle texture_program = BGFX_INVALID_HANDLE;
     bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
     bgfx::VertexBufferHandle vbh = BGFX_INVALID_HANDLE;
     bgfx::IndexBufferHandle ibh = BGFX_INVALID_HANDLE;
+    bgfx::VertexBufferHandle texture_vbh = BGFX_INVALID_HANDLE;
 
     float cam_pitch = 0.0f;
     float cam_yaw = 0.0f;

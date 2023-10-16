@@ -17,7 +17,23 @@
 #include "context.hpp"
 #include "ui/ui.hpp"
 #include "workaround_macos_bgfx_mt.h"
+#include "texture.hpp"
 
+// For main window texture
+struct ScreenSpaceVertex
+{
+    float x, y, z;
+    float u, v;
+};
+
+static ScreenSpaceVertex quadVertices[] = {
+    {-1.0f,  1.0f, 0.0f, 0.0f, 0.0f},
+    { 1.0f,  1.0f, 0.0f, 1.0f, 0.0f},
+    {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f},
+    { 1.0f, -1.0f, 0.0f, 1.0f, 1.0f},
+};
+
+// For headless example
 struct PosColorVertex
 {
     float x;
@@ -111,11 +127,17 @@ void main_loop()
         bx::mtxIdentity(model);
         bgfx::setTransform(model);
 
-        bgfx::setVertexBuffer(0, g_ctxt.vbh);
+        //bgfx::setVertexBuffer(0, g_ctxt.vbh);
         bgfx::setIndexBuffer(g_ctxt.ibh);
 
-        bgfx::submit(0, g_ctxt.program);
+        bgfx::setVertexBuffer(0, g_ctxt.texture_vbh);
+        bgfx::setTexture(0, g_ctxt.texture_sampler, g_ctxt.temp_texture); // 这里假设你已经定义了一个sampler
+        bgfx::submit(0, g_ctxt.texture_program); // 这里假设你已经有一个简单的着色器程序来渲染纹理到全屏四边形上
+
+        //bgfx::submit(0, g_ctxt.program);
+        bgfx::submit(1, g_ctxt.program);
         bgfx::touch(0);
+        bgfx::touch(1);
         bgfx::frame();
     }
 }
@@ -177,6 +199,13 @@ int main(int, char**)
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
     bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
 
+    // Setup bgfx headless renderer
+    bgfx::TextureHandle headlessTexture = bgfx::createTexture2D(g_ctxt.width, g_ctxt.height, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT);
+    bgfx::FrameBufferHandle headlessFB = bgfx::createFrameBuffer(1, &headlessTexture, true);
+    bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
+    bgfx::setViewRect(1, 0, 0, g_ctxt.width, g_ctxt.height);
+    bgfx::setViewFrameBuffer(1, headlessFB); // 设置headless渲染目标
+
     // Setup Dear ImGui style
     ImGui::StyleColorsLight();
 
@@ -206,16 +235,12 @@ int main(int, char**)
     const std::string shader_root = g_ctxt.exe_file_path / "shaders/";
     std::string vshader;
     if (!fileops::read_file(shader_root + "v_simple.bin", vshader)) {
-        printf("Could not find shader vertex shader (ensure shaders have been "
-               "compiled).\n"
-               "Run compile-shaders-<platform>.sh/bat\n");
+        printf("Could not find shader vertex shader (ensure shaders have been compiled).\nRun compile-shaders-<platform>.sh/bat\n");
         return 1;
     }
     std::string fshader;
     if (!fileops::read_file(shader_root + "f_simple.bin", fshader)) {
-        printf("Could not find shader fragment shader (ensure shaders have "
-               "been compiled).\n"
-               "Run compile-shaders-<platform>.sh/bat\n");
+        printf("Could not find shader fragment shader (ensure shaders have been compiled).\nRun compile-shaders-<platform>.sh/bat\n");
         return 1;
     }
     bgfx::ShaderHandle vsh = create_shader(vshader, "vshader");
@@ -225,9 +250,40 @@ int main(int, char**)
     g_ctxt.vbh = vbh;
     g_ctxt.ibh = ibh;
 
+    // Test window texture
+    bgfx::VertexLayout screenSpaceLayout;
+    screenSpaceLayout
+        .begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .end();
+    bgfx::VertexBufferHandle quadVBH = bgfx::createVertexBuffer(
+        bgfx::makeRef(quadVertices, sizeof(quadVertices)),
+        screenSpaceLayout
+    );
+    g_ctxt.temp_texture = loadTexture((g_ctxt.exe_file_path / "texture.jpeg").string().c_str());
+    std::string texture_vshader;
+    if (!fileops::read_file(shader_root + "v_texture.bin", texture_vshader)) {
+        printf("Could not find shader vertex shader (ensure shaders have been compiled).\nRun compile-shaders-<platform>.sh/bat\n");
+        return 1;
+    }
+    std::string texture_fshader;
+    if (!fileops::read_file(shader_root + "f_texture.bin", texture_fshader)) {
+        printf("Could not find shader fragment shader (ensure shaders have been compiled).\nRun compile-shaders-<platform>.sh/bat\n");
+        return 1;
+    }
+    
+    bgfx::ShaderHandle texture_vsh = create_shader(texture_vshader, "texture_vshader");
+    bgfx::ShaderHandle texture_fsh = create_shader(texture_fshader, "texture_fshader");
+    bgfx::ProgramHandle texture_program = bgfx::createProgram(texture_vsh, texture_fsh, true);
+    g_ctxt.texture_program = texture_program;
+    g_ctxt.texture_vbh = quadVBH;
+    //g_ctxt.texture_sampler = bgfx::createUniform("s_texture_sampler", bgfx::UniformType::Sampler);
     main_loop();
 
     // Cleanup
+    bgfx::destroy(headlessFB);
+    bgfx::destroy(headlessTexture);
     bgfx::destroy(vbh);
     bgfx::destroy(ibh);
     bgfx::destroy(program);

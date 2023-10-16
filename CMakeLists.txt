@@ -48,6 +48,8 @@ include_directories(${CMAKE_SOURCE_DIR}/3rdparty/bgfx/include)
 set(BGFX_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/bgfx/bin)
 find_library(BGFX_bgfxDebug bgfxDebug HINTS ${BGFX_LIB_PATH})
 find_library(BGFX_bimgDebug bimgDebug HINTS ${BGFX_LIB_PATH})
+find_library(BGFX_bimg_decodeDebug bimg_decodeDebug HINTS ${BGFX_LIB_PATH})
+find_library(BGFX_bimg_encodeDebug bimg_encodeDebug HINTS ${BGFX_LIB_PATH})
 find_library(BGFX_bxDebug bxDebug HINTS ${BGFX_LIB_PATH})
 add_compile_definitions(BX_CONFIG_DEBUG True)
 
@@ -84,6 +86,8 @@ endif()
 set(SHADER_SOURCES
     "${CMAKE_SOURCE_DIR}/src/shaders/f_simple.sc#fragment"
     "${CMAKE_SOURCE_DIR}/src/shaders/v_simple.sc#vertex"
+    "${CMAKE_SOURCE_DIR}/src/shaders/f_texture.sc#fragment"
+    "${CMAKE_SOURCE_DIR}/src/shaders/v_texture.sc#vertex"
 )
 file(MAKE_DIRECTORY ${CMAKE_SHADER_OUTPUT_DIRECTORY})
 foreach(SHADER_INFO ${SHADER_SOURCES})
@@ -118,6 +122,8 @@ add_dependencies(${PROJECT_NAME} Shaders)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${BGFX_bgfxDebug}
     ${BGFX_bimgDebug}
+    ${BGFX_bimg_decodeDebug}
+    ${BGFX_bimg_encodeDebug}
     ${BGFX_bxDebug}
     ${SDL2_LIBRARIES}
     spdlog::spdlog
