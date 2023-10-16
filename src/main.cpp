@@ -75,9 +75,38 @@ void main_loop()
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
             if (event.type == SDL_QUIT)
+            {
                 done = true;
+            }
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(g_ctxt.window))
+            {
                 done = true;
+            }
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED && event.window.windowID == SDL_GetWindowID(g_ctxt.window))
+            {
+                g_ctxt.width = event.window.data1;
+                g_ctxt.height = event.window.data2;
+                // resize bgfx
+                bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
+                bgfx::setViewRect(1, 0, 0, g_ctxt.width, g_ctxt.height);
+                // Update the projection matrix
+                float proj[16];
+                bx::mtxProj(
+                    proj, 60.0f, float(g_ctxt.width) / float(g_ctxt.height), 0.1f,
+                    100.0f, bgfx::getCaps()->homogeneousDepth);
+                bgfx::setViewTransform(0, NULL, proj); // Set the new projection matrix for view 0
+                bgfx::reset(g_ctxt.width, g_ctxt.height, BGFX_RESET_VSYNC);
+                bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
+                bgfx::setViewRect(1, 0, 0, g_ctxt.width, g_ctxt.height);
+                // Update the projection matrix
+                bx::mtxProj(
+                    proj, 60.0f, float(g_ctxt.width) / float(g_ctxt.height), 0.1f,
+                    100.0f, bgfx::getCaps()->homogeneousDepth);
+                bgfx::setViewTransform(0, NULL, proj); // Set the new projection matrix for view 0
+                // resize imgui
+                g_ctxt.p_imgui_io->DisplaySize = ImVec2((float)g_ctxt.width, (float)g_ctxt.height);
+                g_ctxt.p_logger->info("SDL Window resized to : {} * {}", g_ctxt.width, g_ctxt.height);
+            }
         }
 
         // Start the Dear ImGui frame
@@ -85,6 +114,7 @@ void main_loop()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        //g_ctxt.p_ui_stat->show_demo_window = false;
         ui_update();
 
         // Rendering
@@ -131,10 +161,9 @@ void main_loop()
         bgfx::setIndexBuffer(g_ctxt.ibh);
 
         bgfx::setVertexBuffer(0, g_ctxt.texture_vbh);
-        bgfx::setTexture(0, g_ctxt.texture_sampler, g_ctxt.temp_texture); // 这里假设你已经定义了一个sampler
-        bgfx::submit(0, g_ctxt.texture_program); // 这里假设你已经有一个简单的着色器程序来渲染纹理到全屏四边形上
+        bgfx::setTexture(0, g_ctxt.texture_sampler, g_ctxt.temp_texture);
+        bgfx::submit(0, g_ctxt.texture_program);
 
-        //bgfx::submit(0, g_ctxt.program);
         bgfx::submit(1, g_ctxt.program);
         bgfx::touch(0);
         bgfx::touch(1);
@@ -195,7 +224,10 @@ int main(int, char**)
     bgfx_init.resolution.height = g_ctxt.height;
     bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
     bgfx_init.platformData = pd;
+    bgfx_init.debug = true;
+    bgfx_init.profile = true;
     bgfx::init(bgfx_init);
+    bgfx::setDebug(BGFX_DEBUG_TEXT|BGFX_DEBUG_PROFILER|BGFX_DEBUG_STATS);
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
     bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
 
@@ -204,7 +236,7 @@ int main(int, char**)
     bgfx::FrameBufferHandle headlessFB = bgfx::createFrameBuffer(1, &headlessTexture, true);
     bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x6495EDFF, 1.0f, 0);
     bgfx::setViewRect(1, 0, 0, g_ctxt.width, g_ctxt.height);
-    bgfx::setViewFrameBuffer(1, headlessFB); // 设置headless渲染目标
+    bgfx::setViewFrameBuffer(1, headlessFB);
 
     // Setup Dear ImGui style
     ImGui::StyleColorsLight();
@@ -286,6 +318,9 @@ int main(int, char**)
     bgfx::destroy(headlessTexture);
     bgfx::destroy(vbh);
     bgfx::destroy(ibh);
+    bgfx::destroy(quadVBH);
+    bgfx::destroy(texture_program);
+    bgfx::destroy(g_ctxt.temp_texture);
     bgfx::destroy(program);
     ImGui_ImplSDL2_Shutdown();
     ImGui_Implbgfx_Shutdown();

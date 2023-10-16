@@ -37,6 +37,7 @@ struct kcad_context {
     float cam_pitch = 0.0f;
     float cam_yaw = 0.0f;
     float rot_scale = 0.01f;
+    float matrix_view[16];
 
     int prev_mouse_x = 0;
     int prev_mouse_y = 0;
