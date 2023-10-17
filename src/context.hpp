@@ -24,9 +24,9 @@ struct kcad_context {
     int height;
     SDL_Window * window;
 
-    bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
-    bgfx::VertexBufferHandle vbh = BGFX_INVALID_HANDLE;
-    bgfx::IndexBufferHandle ibh = BGFX_INVALID_HANDLE;
+    bgfx::ProgramHandle main_wnd_canvas_program = BGFX_INVALID_HANDLE;
+    bgfx::VertexBufferHandle main_wnd_canvas_vbh = BGFX_INVALID_HANDLE;
+    //bgfx::IndexBufferHandle ibh = BGFX_INVALID_HANDLE;
 
     float cam_pitch = 0.0f;
     float cam_yaw = 0.0f;

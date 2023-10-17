@@ -18,24 +18,18 @@
 #include "ui/ui.hpp"
 #include "workaround_macos_bgfx_mt.h"
 
-struct PosColorVertex
+// For main window texture
+struct main_wnd_canvas_vertex
 {
-    float x;
-    float y;
-    float z;
-    uint32_t abgr;
+    float x, y, z;
+    float u, v;
 };
 
-static PosColorVertex cube_vertices[] = {
-    {-1.0f, 1.0f, 1.0f, 0xff000000},   {1.0f, 1.0f, 1.0f, 0xff0000ff},
-    {-1.0f, -1.0f, 1.0f, 0xff00ff00},  {1.0f, -1.0f, 1.0f, 0xff00ffff},
-    {-1.0f, 1.0f, -1.0f, 0xffff0000},  {1.0f, 1.0f, -1.0f, 0xffff00ff},
-    {-1.0f, -1.0f, -1.0f, 0xffffff00}, {1.0f, -1.0f, -1.0f, 0xffffffff},
-};
-
-static const uint16_t cube_tri_list[] = {
-    0, 1, 2, 1, 3, 2, 4, 6, 5, 5, 6, 7, 0, 2, 4, 4, 2, 6,
-    1, 5, 3, 5, 7, 3, 0, 4, 1, 4, 5, 1, 2, 3, 6, 6, 3, 7,
+static main_wnd_canvas_vertex main_wnd_canvas_vertices[] = {
+    {-1.0f,  1.0f, 0.0f, 0.0f, 0.0f},
+    { 1.0f,  1.0f, 0.0f, 1.0f, 0.0f},
+    {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f},
+    { 1.0f, -1.0f, 0.0f, 1.0f, 1.0f},
 };
 
 static bgfx::ShaderHandle create_shader(
@@ -128,10 +122,10 @@ void main_loop()
         bx::mtxIdentity(model);
         bgfx::setTransform(model);
 
-        bgfx::setVertexBuffer(0, g_ctxt.vbh);
-        bgfx::setIndexBuffer(g_ctxt.ibh);
+        bgfx::setVertexBuffer(0, g_ctxt.main_wnd_canvas_vbh);
+        //bgfx::setIndexBuffer(g_ctxt.ibh);
 
-        bgfx::submit(0, g_ctxt.program);
+        bgfx::submit(0, g_ctxt.main_wnd_canvas_program);
         bgfx::touch(0);
         bgfx::frame();
     }
@@ -207,47 +201,33 @@ int main(int, char**)
     ImGui_ImplSDL2_InitForOpenGL(g_ctxt.window, nullptr);
 #endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
 
-    // TODO: Load Fonts
+    // bgfx draw canvas plane
+    bgfx::VertexLayout main_wnd_canvas_v_layout;
+    main_wnd_canvas_v_layout.begin().add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();//data format
+    bgfx::VertexBufferHandle main_wnd_canvas_vbh = bgfx::createVertexBuffer(bgfx::makeRef(main_wnd_canvas_vertices, sizeof(main_wnd_canvas_vertices)), main_wnd_canvas_v_layout);
 
-    // bgfx draw something
-    bgfx::VertexLayout pos_col_vert_layout;
-    pos_col_vert_layout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-        .end();
-    bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(
-        bgfx::makeRef(cube_vertices, sizeof(cube_vertices)),
-        pos_col_vert_layout);
-    bgfx::IndexBufferHandle ibh = bgfx::createIndexBuffer(
-        bgfx::makeRef(cube_tri_list, sizeof(cube_tri_list)));
     const std::string shader_root = g_ctxt.exe_file_path / "shaders/";
     std::string vshader;
-    if (!fileops::read_file(shader_root + "v_simple.bin", vshader)) {
-        printf("Could not find shader vertex shader (ensure shaders have been "
-               "compiled).\n"
-               "Run compile-shaders-<platform>.sh/bat\n");
+    if (!fileops::read_file(shader_root + "v_main_wnd_canvas.bin", vshader)) {
+        printf("Could not find shader vertex shader (ensure shaders have been compiled).\nRun compile-shaders-<platform>.sh/bat\n");
         return 1;
     }
     std::string fshader;
-    if (!fileops::read_file(shader_root + "f_simple.bin", fshader)) {
-        printf("Could not find shader fragment shader (ensure shaders have "
-               "been compiled).\n"
-               "Run compile-shaders-<platform>.sh/bat\n");
+    if (!fileops::read_file(shader_root + "f_main_wnd_canvas.bin", fshader)) {
+        printf("Could not find shader fragment shader (ensure shaders have been compiled).\nRun compile-shaders-<platform>.sh/bat\n");
         return 1;
     }
     bgfx::ShaderHandle vsh = create_shader(vshader, "vshader");
     bgfx::ShaderHandle fsh = create_shader(fshader, "fshader");
-    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
-    g_ctxt.program = program;
-    g_ctxt.vbh = vbh;
-    g_ctxt.ibh = ibh;
+    bgfx::ProgramHandle main_wnd_canvas_program = bgfx::createProgram(vsh, fsh, true);
+    g_ctxt.main_wnd_canvas_program = main_wnd_canvas_program;
+    g_ctxt.main_wnd_canvas_vbh = main_wnd_canvas_vbh;
 
     main_loop();
 
     // Cleanup
-    bgfx::destroy(vbh);
-    bgfx::destroy(ibh);
-    bgfx::destroy(program);
+    bgfx::destroy(main_wnd_canvas_vbh);
+    bgfx::destroy(main_wnd_canvas_program);
     ImGui_ImplSDL2_Shutdown();
     ImGui_Implbgfx_Shutdown();
     ImGui::DestroyContext();

@@ -82,8 +82,8 @@ endif()
 
 # Compile shaders
 set(SHADER_SOURCES
-    "${CMAKE_SOURCE_DIR}/src/shaders/f_simple.sc#fragment"
-    "${CMAKE_SOURCE_DIR}/src/shaders/v_simple.sc#vertex"
+    "${CMAKE_SOURCE_DIR}/src/shaders/f_main_wnd_canvas.sc#fragment"
+    "${CMAKE_SOURCE_DIR}/src/shaders/v_main_wnd_canvas.sc#vertex"
 )
 file(MAKE_DIRECTORY ${CMAKE_SHADER_OUTPUT_DIRECTORY})
 foreach(SHADER_INFO ${SHADER_SOURCES})
