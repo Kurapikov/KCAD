@@ -62,6 +62,23 @@ void main_loop()
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(g_ctxt.window))
                 done = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED && event.window.windowID == SDL_GetWindowID(g_ctxt.window))
+            {
+                g_ctxt.width = event.window.data1;
+                g_ctxt.height = event.window.data2;
+                // resize bgfx
+                bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
+                // Update the projection matrix
+                float proj[16];
+                bx::mtxProj(
+                    proj, 60.0f, float(g_ctxt.width) / float(g_ctxt.height), 0.1f,
+                    100.0f, bgfx::getCaps()->homogeneousDepth);
+                bgfx::setViewTransform(0, NULL, proj); // Set the new projection matrix for view 0
+                bgfx::reset(g_ctxt.width, g_ctxt.height, BGFX_RESET_VSYNC);
+                // resize imgui
+                g_ctxt.p_imgui_io->DisplaySize = ImVec2((float)g_ctxt.width, (float)g_ctxt.height);
+                g_ctxt.p_logger->info("SDL Window resized to : {} * {}", g_ctxt.width, g_ctxt.height);
+            }
         }
 
         // Start the Dear ImGui frame
