@@ -27,9 +27,12 @@ struct main_wnd_canvas_vertex
 
 static main_wnd_canvas_vertex main_wnd_canvas_vertices[] = {
     {-1.0f,  1.0f, 0.0f, 0.0f, 0.0f},
+    {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f},
+    { 1.0f,  1.0f, 0.0f, 1.0f, 0.0f},
+    
+    { 1.0f, -1.0f, 0.0f, 1.0f, 1.0f},
     { 1.0f,  1.0f, 0.0f, 1.0f, 0.0f},
     {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f},
-    { 1.0f, -1.0f, 0.0f, 1.0f, 1.0f},
 };
 
 static bgfx::ShaderHandle create_shader(
