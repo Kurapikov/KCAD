@@ -16,7 +16,7 @@
 #include "utils.hpp"
 #include "context.hpp"
 #include "ui/ui.hpp"
-#include "main_wnd_canvas_vertices.hpp"
+#include "main_wnd_canvas_coords.hpp"
 #include "workaround_macos_bgfx_mt.h"
 
 static bgfx::ShaderHandle create_shader(const std::string& shader, const char* name)
@@ -202,6 +202,7 @@ int main(int, char**)
 
     bgfx::Init bgfx_init;
     bgfx_init.type = bgfx::RendererType::Count; // auto choose renderer
+    //bgfx_init.type = bgfx::RendererType::OpenGL;
     bgfx_init.resolution.width = g_ctxt.width;
     bgfx_init.resolution.height = g_ctxt.height;
     bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
@@ -226,8 +227,8 @@ int main(int, char**)
     // bgfx draw canvas plane
     setup_main_wnd_canvas_vertices();
     bgfx::VertexLayout main_wnd_canvas_v_layout;
-    main_wnd_canvas_v_layout.begin().add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).end();//data format
-    bgfx::VertexBufferHandle main_wnd_canvas_vbh = bgfx::createVertexBuffer(bgfx::makeRef(main_wnd_canvas_vertices, sizeof(main_wnd_canvas_vertices)), main_wnd_canvas_v_layout);
+    main_wnd_canvas_v_layout.begin().add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();//data format
+    bgfx::VertexBufferHandle main_wnd_canvas_vbh = bgfx::createVertexBuffer(bgfx::makeRef(main_wnd_canvas_coords, sizeof(main_wnd_canvas_coords)), main_wnd_canvas_v_layout);
 
     const std::string shader_root = g_ctxt.exe_file_path / "shaders/";
     std::string vshader;
