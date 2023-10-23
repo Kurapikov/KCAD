@@ -48,12 +48,6 @@ void main_loop()
                 g_ctxt.height = event.window.data2;
                 // resize bgfx
                 bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
-                // Update the projection matrix
-                float proj[16];
-                bx::mtxProj(
-                    proj, 60.0f, float(g_ctxt.width) / float(g_ctxt.height), 0.1f,
-                    100.0f, bgfx::getCaps()->homogeneousDepth);
-                bgfx::setViewTransform(0, NULL, proj); // Set the new projection matrix for view 0
                 bgfx::reset(g_ctxt.width, g_ctxt.height, BGFX_RESET_VSYNC);
                 // resize imgui
                 g_ctxt.p_imgui_io->DisplaySize = ImVec2((float)g_ctxt.width, (float)g_ctxt.height);
@@ -89,7 +83,7 @@ void main_loop()
         bx::mtxRotateXYZ(cam_rotation, g_ctxt.cam_pitch, g_ctxt.cam_yaw, 0.0f);
 
         float cam_translation[16];
-        bx::mtxTranslate(cam_translation, 0.0f, 0.0f, -5.0f);
+        bx::mtxTranslate(cam_translation, 0.0f, 0.0f, -1.0f);
 
         float cam_transform[16];
         bx::mtxMul(cam_transform, cam_translation, cam_rotation);
@@ -98,9 +92,8 @@ void main_loop()
         bx::mtxInverse(view, cam_transform);
 
         float proj[16];
-        bx::mtxProj(
-            proj, 60.0f, float(g_ctxt.width) / float(g_ctxt.height), 0.1f,
-            100.0f, bgfx::getCaps()->homogeneousDepth);
+        bx::mtxOrtho(proj, -g_ctxt.canvas_x_max / 2, g_ctxt.canvas_x_max / 2, -g_ctxt.canvas_y_max / 2, g_ctxt.canvas_y_max / 2,
+            0.1f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
 
         bgfx::setViewTransform(0, view, proj);
 
