@@ -16,5 +16,3 @@ inline main_wnd_canvas_coord main_wnd_canvas_coords[] = {
     { 1.0f,  1.0f, 0.0f,  1.0f, 1.0f},
     {-1.0f, -1.0f, 0.0f,  0.0f, 0.0f}
 };
-
-void setup_main_wnd_canvas_vertices();

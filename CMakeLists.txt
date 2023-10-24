@@ -35,10 +35,11 @@ file(GLOB PROJECT_SRC_LIST RELATIVE ${CMAKE_SOURCE_DIR}
     "src/imgui_impl_bgfx/*.cpp"
     "src/simple_ini/*.c"
     "src/ui/*.cpp"
+    "src/temp_codes/*.cpp"
 )
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     file(GLOB DARWIN_MM_SRC_LIST RELATIVE ${CMAKE_SOURCE_DIR} 
-        "src/*.mm"
+        "src/temp_codes/*.mm"
     )
     list(APPEND PROJECT_SRC_LIST ${DARWIN_MM_SRC_LIST})
 endif()

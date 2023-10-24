@@ -26,7 +26,6 @@ struct kcad_context {
 
     bgfx::ProgramHandle main_wnd_canvas_program = BGFX_INVALID_HANDLE;
     bgfx::VertexBufferHandle main_wnd_canvas_vbh = BGFX_INVALID_HANDLE;
-    //bgfx::IndexBufferHandle ibh = BGFX_INVALID_HANDLE;
     bgfx::TextureHandle main_wnd_canvas_texture_handle = BGFX_INVALID_HANDLE;
     bgfx::UniformHandle main_wnd_canvas_texture_sampler_handle = BGFX_INVALID_HANDLE;
     float cam_pitch = 0.0f;
@@ -38,10 +37,6 @@ struct kcad_context {
 
     struct ui_status *p_ui_stat;
     ImGuiIO *p_imgui_io;
-
-    float canvas_x_max = 1;
-    float canvas_y_max = 1;
-    float canvas_ratio = 1;
 };
 
 inline struct kcad_context g_ctxt;

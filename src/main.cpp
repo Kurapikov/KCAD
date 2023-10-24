@@ -17,7 +17,8 @@
 #include "context.hpp"
 #include "ui/ui.hpp"
 #include "main_wnd_canvas_coords.hpp"
-#include "workaround_macos_bgfx_mt.h"
+#include "temp_codes/workaround_macos_bgfx_mt.h"
+#include "temp_codes/draw_textures.hpp"
 
 static bgfx::ShaderHandle create_shader(const std::string& shader, const char* name)
 {
@@ -47,6 +48,10 @@ void main_loop()
                 g_ctxt.width = event.window.data1;
                 g_ctxt.height = event.window.data2;
                 // resize bgfx
+                if (bgfx::isValid(g_ctxt.main_wnd_canvas_texture_handle)) {
+                    bgfx::destroy(g_ctxt.main_wnd_canvas_texture_handle);
+                }
+                generate_border_texture();
                 bgfx::setViewRect(0, 0, 0, g_ctxt.width, g_ctxt.height);
                 bgfx::reset(g_ctxt.width, g_ctxt.height, BGFX_RESET_VSYNC);
                 // resize imgui
@@ -92,7 +97,7 @@ void main_loop()
         bx::mtxInverse(view, cam_transform);
 
         float proj[16];
-        bx::mtxOrtho(proj, -g_ctxt.canvas_x_max / 2, g_ctxt.canvas_x_max / 2, -g_ctxt.canvas_y_max / 2, g_ctxt.canvas_y_max / 2,
+        bx::mtxOrtho(proj, -1, 1, -1, 1,
             0.1f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
 
         bgfx::setViewTransform(0, view, proj);
@@ -109,41 +114,6 @@ void main_loop()
         bgfx::touch(0);
         bgfx::frame();
     }
-}
-
-void generate_border_texture()
-{
-    uint32_t width = g_ctxt.width;
-    uint32_t height = g_ctxt.height;
-
-    // Create an empty texture
-    g_ctxt.main_wnd_canvas_texture_handle = bgfx::createTexture2D(
-        static_cast<uint16_t>(width), static_cast<uint16_t>(height),
-        false, 1, bgfx::TextureFormat::RGBA8,
-        BGFX_SAMPLER_U_BORDER | BGFX_SAMPLER_V_BORDER | BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIP_POINT, nullptr);
-
-    std::vector<uint8_t> imageData(width * height * 4); // 32bpp
-
-    uint32_t borderWidth = 10;
-
-    for (uint32_t y = 0; y < height; ++y) {
-        for (uint32_t x = 0; x < width; ++x) {
-            uint32_t idx = (y * width + x) * 4;
-            if (x < borderWidth || x >= width - borderWidth || y < borderWidth || y >= height - borderWidth) {
-                imageData[idx] = 255;   // R
-                imageData[idx + 1] = 0; // G
-                imageData[idx + 2] = 0; // B
-                imageData[idx + 3] = 255; // A
-            } else {
-                imageData[idx] = 0;   // R
-                imageData[idx + 1] = 0; // G
-                imageData[idx + 2] = 255; // B
-                imageData[idx + 3] = 255; // A
-            }
-        }
-    }
-    const bgfx::Memory* mem = bgfx::copy(imageData.data(), imageData.size());
-    bgfx::updateTexture2D(g_ctxt.main_wnd_canvas_texture_handle, 0, 0, 0, 0, static_cast<uint16_t>(width), static_cast<uint16_t>(height), mem);
 }
 
 int main(int, char**)
@@ -218,7 +188,6 @@ int main(int, char**)
 #endif // BX_PLATFORM_WINDOWS ? BX_PLATFORM_OSX ? BX_PLATFORM_LINUX
 
     // bgfx draw canvas plane
-    setup_main_wnd_canvas_vertices();
     bgfx::VertexLayout main_wnd_canvas_v_layout;
     main_wnd_canvas_v_layout.begin().add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).end();//data format
     bgfx::VertexBufferHandle main_wnd_canvas_vbh = bgfx::createVertexBuffer(bgfx::makeRef(main_wnd_canvas_coords, sizeof(main_wnd_canvas_coords)), main_wnd_canvas_v_layout);

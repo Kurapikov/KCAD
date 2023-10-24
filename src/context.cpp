@@ -29,14 +29,6 @@ void init_app_context()
     // TODO: this is temp code
     g_ctxt.width=1440;
     g_ctxt.height=900;
-    g_ctxt.canvas_ratio = static_cast<float>(g_ctxt.width) / static_cast<float>(g_ctxt.height);
-    if (g_ctxt.canvas_ratio > 1) {
-        g_ctxt.canvas_x_max = 1;
-        g_ctxt.canvas_y_max = 1 / g_ctxt.canvas_ratio;
-    } else {
-        g_ctxt.canvas_x_max = g_ctxt.canvas_ratio;
-        g_ctxt.canvas_y_max = 1;
-    }
 }
 
 void deinit_app_context()
