@@ -1,10 +1,10 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include "SDL.h"
 #include "SDL_syswm.h"
 
 #include "bx/platform.h"
-#include <bx/math.h>
+#include "bx/math.h"
 #include "bgfx/platform.h"
 #include "bgfx/bgfx.h"
 
@@ -16,7 +16,7 @@
 #include "utils.hpp"
 #include "context.hpp"
 #include "ui/ui.hpp"
-#include "main_wnd_canvas_coords.hpp"
+#include "main_wnd_canvas.hpp"
 #include "temp_codes/workaround_macos_bgfx_mt.h"
 #include "temp_codes/draw_textures.hpp"
 
@@ -30,7 +30,6 @@ static bgfx::ShaderHandle create_shader(const std::string& shader, const char* n
 
 void main_loop()
 {
-        // Main loop
     bool done = false;
     while (!done)
     {
@@ -84,34 +83,11 @@ void main_loop()
             g_ctxt.prev_mouse_y = mouse_y;
         }
 
-        float cam_rotation[16];
-        bx::mtxRotateXYZ(cam_rotation, g_ctxt.cam_pitch, g_ctxt.cam_yaw, 0.0f);
-
-        float cam_translation[16];
-        bx::mtxTranslate(cam_translation, 0.0f, 0.0f, -1.0f);
-
-        float cam_transform[16];
-        bx::mtxMul(cam_transform, cam_translation, cam_rotation);
-
-        float view[16];
-        bx::mtxInverse(view, cam_transform);
-
-        float proj[16];
-        bx::mtxOrtho(proj, -1, 1, -1, 1,
-            0.1f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
-
-        bgfx::setViewTransform(0, view, proj);
-
-        float model[16];
-        bx::mtxIdentity(model);
-        bgfx::setTransform(model);
-
         bgfx::setVertexBuffer(0, g_ctxt.main_wnd_canvas_vbh);
         
         bgfx::setTexture(0, g_ctxt.main_wnd_canvas_texture_sampler_handle, g_ctxt.main_wnd_canvas_texture_handle);
 
         bgfx::submit(0, g_ctxt.main_wnd_canvas_program);
-        bgfx::touch(0);
         bgfx::frame();
     }
 }
@@ -211,6 +187,9 @@ int main(int, char**)
 
     generate_border_texture();
     g_ctxt.main_wnd_canvas_texture_sampler_handle = bgfx::createUniform("s_texture", bgfx::UniformType::Sampler);
+
+    setup_main_wnd_view_proj();
+
     main_loop();
 
     // Cleanup
